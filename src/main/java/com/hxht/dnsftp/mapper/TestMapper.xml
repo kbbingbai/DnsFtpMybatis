@@ -1,0 +1,115 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.hxht.dnsftp.dao.TestMapper">
+  <resultMap id="BaseResultMap" type="com.hxht.dnsftp.model.Test">
+    <id column="id" jdbcType="INTEGER" property="id" />
+    <result column="filename" jdbcType="VARCHAR" property="filename" />
+    <result column="downflag" jdbcType="VARCHAR" property="downflag" />
+    <result column="createtime" jdbcType="TIMESTAMP" property="createtime" />
+    <result column="deleteflag" jdbcType="VARCHAR" property="deleteflag" />
+    <result column="downtime" jdbcType="TIMESTAMP" property="downtime" />
+    <result column="filelen" jdbcType="BIGINT" property="filelen" />
+    <result column="startpulltime" jdbcType="TIMESTAMP" property="startpulltime" />
+    <result column="pulltimeoutcount" jdbcType="VARCHAR" property="pulltimeoutcount" />
+    <result column="pullip" jdbcType="VARCHAR" property="pullip" />
+  </resultMap>
+
+  <sql id="Base_Column_List">
+    id, filename, downflag, createtime, deleteflag, downtime, filelen, startpulltime,
+    pulltimeoutcount, pullip
+  </sql>
+
+  <!--bootResume-->
+  <select id="bootResumeGetData" parameterType="java.lang.String" resultMap="BaseResultMap">
+    select <include refid="Base_Column_List" /> from test where downflag = #{downflag}
+  </select>
+
+  <update id="bootResumeChaStatus" parameterType="java.util.List" >
+      update test
+      <set>
+        downflag = ${@com.hxht.dnsftp.model.Test@pullInitState},
+        createtime=now()
+      </set>
+      where id in
+      <foreach collection="list" item="item" index="index" open="(" close=")" separator=",">
+        #{item.id}
+      </foreach>
+  </update>
+
+
+  <!--DeleteFtpFile-->
+  <select id="deleteFtpFileGetData" parameterType="java.util.Map" resultMap="BaseResultMap">
+    select <include refid="Base_Column_List" />,difdays,startpulltimeDateFormat from
+    (select <include refid="Base_Column_List" />,DATE_FORMAT(startpulltime,'%Y-%m-%d') startpulltimeDateFormat,DATEDIFF(now(),startpulltime) as difdays from test) temp
+    where (downflag=#{downflag} or difdays>=#{intervalDay}) and deleteflag=#{deleteflag}
+  </select>
+
+  <update id="deleteFtpFileChaStatus" parameterType="java.util.List" >
+    update test
+    <set>
+      deleteflag = ${@com.hxht.dnsftp.model.Test@deleteflagSucc}
+    </set>
+    where id in
+    <foreach collection="list" item="item"  open="(" close=")" separator=",">
+      #{item.id}
+    </foreach>
+  </update>
+
+  <!--FtpToSql-->
+  <insert id="ftpToSqlInsertData" parameterType="java.util.List">
+      insert into test(filename,filelen) values
+      <foreach collection="list" separator="," item="item">
+        (#{item.filename},#{item.filelen})
+      </foreach>
+  </insert>
+
+  <update id="ftpToSqlUpdateData" parameterType="java.util.List" >
+    <foreach collection="list" item="item" separator=";">
+     update test
+      <set>
+        filelen = #{item.filelen},
+        downflag = #{item.downflag}
+      </set>
+    where id=#{item.id}
+    </foreach>
+  </update>
+
+  <select id="ftpToSqlGetData"  parameterType="java.lang.String" resultMap="BaseResultMap">
+    select <include refid="Base_Column_List" /> from test where deleteflag!=#{deleteflag}
+  </select>
+
+  <!--PullFile-->
+  <select id="pullFileGetData"  parameterType="java.util.Map" resultMap="BaseResultMap">
+    select <include refid="Base_Column_List" /> from test where downflag=#{pullEnable} or downflag=#{pullFailOne} or downflag=#{pullFailTwo} order by id limit 1
+  </select>
+
+  <update id="pullFileStartPull" parameterType="java.util.Map">
+    update test set downflag=#{downflag},pullip=#{pullip},startpulltime=now() where id=#{id} and downflag!=#{downflag}
+  </update>
+
+  <update id="pullFileEndPullSucc" parameterType="com.hxht.dnsftp.model.Test">
+    update test set downflag=#{downflag},downtime=now() where id=#{id}
+  </update>
+
+  <update id="pullFileEndPullFail" parameterType="com.hxht.dnsftp.model.Test">
+    update test set downflag=#{downflag} where id=#{id}
+  </update>
+
+
+  <!--PullTimeoutHandler-->
+  <select id="pullTimeoutHandlerGetData"  parameterType="java.util.Map" resultMap="BaseResultMap">
+      select <include refid="Base_Column_List" />,pullfiletimeoutmin from (select <include refid="Base_Column_List" />,floor((UNIX_TIMESTAMP(now()) - UNIX_TIMESTAMP(startpulltime))/60) pullfiletimeoutmin
+      from test where downflag=#{downflag} and pullip=#{pullip}) temp where pullfiletimeoutmin>=#{pullfiletimeoutmin} order by id desc limit 1
+  </select>
+
+  <update id="pullTimeoutHandlerChaStatus" parameterType="java.util.Map">
+    update test set downflag = #{downflag},pulltimeoutcount=#{pulltimeoutcount} where id =#{id}
+  </update>
+
+
+  <!--UploadFailFileName-->
+  <select id="uploadFailFileNameGetData"  parameterType="java.util.Map" resultMap="BaseResultMap">
+    select <include refid="Base_Column_List" /> from test where downflag=#{downflag} and deleteflag=#{deleteflag} and DATE_FORMAT(createtime,'%Y-%m-%d')=#{createtime}
+  </select>
+
+</mapper>
