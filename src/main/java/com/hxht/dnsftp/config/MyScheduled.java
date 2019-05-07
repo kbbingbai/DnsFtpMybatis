@@ -12,7 +12,7 @@ public class MyScheduled {
     @Bean(name = "myScheduledTask")
     public MyScheduledTask taskScheduler() {
         MyScheduledTask taskScheduler = new MyScheduledTask();
-        taskScheduler.setPoolSize(6);
+        taskScheduler.setPoolSize(4);
         return taskScheduler;
     }
 }

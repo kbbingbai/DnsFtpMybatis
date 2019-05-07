@@ -1,7 +1,7 @@
 package com.hxht.dnsftp.service;
 
-import com.hxht.dnsftp.dao.TestMapper;
-import com.hxht.dnsftp.model.Test;
+import com.hxht.dnsftp.dao.FileListMapper;
+import com.hxht.dnsftp.model.FileList;
 import com.hxht.dnsftp.util.DateUtils;
 import com.hxht.dnsftp.util.HdfsClient;
 import org.slf4j.Logger;
@@ -9,10 +9,8 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.CommandLineRunner;
-import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 
-import javax.annotation.Resource;
 import java.util.List;
 
 /**
@@ -20,7 +18,7 @@ import java.util.List;
  * 只需处理downflag=-2，其它的 -3(钢存入的数据)  0（可拉取的状态），1（拉取一次失败的程序）2（拉取两次次失败的程序）1（拉取三次失败的程序）不需要处理
  * @Order(value=1)  five
  */
-//@Component
+@Component
 public class BootResume implements CommandLineRunner {
 
     @Value("${hdfs.hdfsUrl}")
@@ -29,7 +27,7 @@ public class BootResume implements CommandLineRunner {
     private String hdfsDir;
 
     @Autowired
-    TestMapper testMapper;
+    FileListMapper fileListMapper;
 
     private static final Logger log = LoggerFactory.getLogger(BootResume.class);
 
@@ -37,11 +35,11 @@ public class BootResume implements CommandLineRunner {
     public void run(String... args) throws Exception {
         log.info("BootResume run方法执行");
         //查询那些downflag=-2的数据,把它的数据改成-3
-        List<Test> data = bootResumeGetData();
+        List<FileList> data = bootResumeGetData();
         if(data!=null&&data.size() != 0){
             //删除数据
             for (int i = 0; i < data.size(); i++) {
-                Test temp = data.get(i);
+                FileList temp = data.get(i);
                 String currday = DateUtils.getCurrDay(temp.getCreatetime());
                 String yesterday = DateUtils.getYesterday(temp.getCreatetime());
                 boolean flag = HdfsClient.deleteFile(hdfsUrl, hdfsDir, currday, temp.getFilename());
@@ -60,15 +58,15 @@ public class BootResume implements CommandLineRunner {
     /**
      * 查询符合条件的数据 downflag = -2
      */
-    public List<Test> bootResumeGetData() {
-        List<Test> list = testMapper.bootResumeGetData(Test.pullingFile);
+    public List<FileList> bootResumeGetData() {
+        List<FileList> list = fileListMapper.bootResumeGetData(FileList.pullingFile);
         return list;
     }
     /***
      * 把这些数据的downflag = -2 的状态改变成-3
      */
-    public int bootResumeChaStatus(List<Test> list) {
-      return testMapper.bootResumeChaStatus(list);
+    public int bootResumeChaStatus(List<FileList> list) {
+      return fileListMapper.bootResumeChaStatus(list);
     }
 
 }

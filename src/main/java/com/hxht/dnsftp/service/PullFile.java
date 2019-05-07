@@ -1,7 +1,7 @@
 package com.hxht.dnsftp.service;
 
-import com.hxht.dnsftp.dao.TestMapper;
-import com.hxht.dnsftp.model.Test;
+import com.hxht.dnsftp.dao.FileListMapper;
+import com.hxht.dnsftp.model.FileList;
 import com.hxht.dnsftp.util.FtpUtil;
 import com.hxht.dnsftp.util.HdfsClient;
 import org.apache.commons.lang.time.DateFormatUtils;
@@ -11,7 +11,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import java.io.File;
@@ -24,7 +23,7 @@ import java.util.HashMap;
 /**
  * 以mysql当中的数据为标准，查询数据库当中的数据，依据数据库当中的数据从服务器上拉取文件到本地服务器,关改变数据库中相应数据的状态标识 two
  */
-@Component
+//@Component
 public class PullFile {
 
     @Autowired
@@ -40,7 +39,7 @@ public class PullFile {
     public String pullip;
 
     @Autowired
-    TestMapper testMapper;
+    FileListMapper fileListMapper;
 
     @Value("${ftp.remoteDirectory}")
     public String remoteDirectory;
@@ -54,11 +53,11 @@ public class PullFile {
     /**
      * 从服务器上拉取文件
      */
-    @Scheduled(fixedRate = 120000, initialDelay = 45000)
+    @Scheduled(fixedRate = 120000, initialDelay = 5000)
     public void pullFile() {
         //得到一个未被标记的文件名，并把他标记为正在在拉取
         log.info("PullFile  进行拉取文件，pullFile方法执行");
-        Test test = getFileName();
+        FileList test = getFileName();
         if (test != null) {
             ftpClient = ftpUtil.getFtpClient();
             uploadHadoop(test);
@@ -66,23 +65,23 @@ public class PullFile {
     }
 
     //得到一个未被标记的文件名，并把他标记为正在在拉取
-    public Test getFileName() {
-        Test test = null;
+    public FileList getFileName() {
+        FileList test = null;
         try {
-            HashMap<String,String> map = new HashMap<String,String>();
-            map.put("pullEnable",Test.pullEnable);
-            map.put("pullFailOne",Test.pullFailOne);
-            map.put("pullFailTwo",Test.pullFailTwo);
-            test = testMapper.pullFileGetData(map);
+            HashMap<String,Object> map = new HashMap<String,Object>();
+            map.put("pullEnable", FileList.pullEnable);
+            map.put("pullFailOne", FileList.pullFailOne);
+            map.put("pullFailTwo", FileList.pullFailTwo);
+            test = fileListMapper.pullFileGetData(map);
         } catch (Exception e) {
             log.error("PullFile  方法名getFileName失败");
         }
         if (test != null) {
-            HashMap<String,String> map = new HashMap<String,String>();
-            map.put("downflag",Test.pullingFile);
+            HashMap<String,Object> map = new HashMap<String,Object>();
+            map.put("downflag", FileList.pullingFile);
             map.put("pullip",pullip);
             map.put("id",test.getId().toString());
-            int updateCoun = testMapper.pullFileStartPull(map);
+            int updateCoun = fileListMapper.pullFileStartPull(map);
             if (updateCoun == 1) {
                 log.info("PullFile  getFileName得到了一条数据，得到的数据是:" + test);
             } else{
@@ -95,7 +94,7 @@ public class PullFile {
     }
 
     //把文件传到hadoop里面，并返回是否已经上传成功的标记
-    public boolean uploadHadoop(Test test) {
+    public boolean uploadHadoop(FileList test) {
         boolean flag = false;
         String filename = test.getFilename();
         File file = new File(filename);
@@ -110,7 +109,7 @@ public class PullFile {
         }
 
         if (ftpFileArr == null || ftpFileArr.length == 0) {//如果这个文件在远程不存在
-            test.setDownflag(String.valueOf(Integer.parseInt(test.getDownflag()) + 1));
+            test.setDownflag(test.getDownflag()+1);
             pullFailFile(test);
         } else {
             try {
@@ -119,16 +118,16 @@ public class PullFile {
                 flag = HdfsClient.toHdfs(hdfsUrl, is, filename, hdfsDir + strDate);
                 //下載成功後的操作
                 if (flag) {
-                    test.setDownflag(Test.pullSucc);
+                    test.setDownflag(FileList.pullSucc);
                     test.setDowntime(new Timestamp(new Date().getTime()));
                     pullSuccFile(test);
                 } else {//如果下載不成功
-                    test.setDownflag(String.valueOf(Integer.parseInt(test.getDownflag()) + 1));
+                    test.setDownflag(test.getDownflag()+1);
                     pullFailFile(test);
                 }
             } catch (IOException e) {
                 log.error("PullFile   发生异常uploadHadoop方法，异常e：{}", e);
-                test.setDownflag(String.valueOf(Integer.parseInt(test.getDownflag()) + 1));
+                test.setDownflag(test.getDownflag()+1);
                 pullFailFile(test);
             } finally {
                 try {
@@ -160,15 +159,15 @@ public class PullFile {
     /**
      * 记录拉取失败的数据，传入的List数据
      */
-    public void pullFailFile(final Test test) {
-        testMapper.pullFileEndPullFail(test);
+    public void pullFailFile(final FileList test) {
+        fileListMapper.pullFileEndPullFail(test);
     }
 
     /**
      * 记录拉取成功的数据，传入的List数据
      */
-    public void pullSuccFile(final Test test) {
-        testMapper.pullFileEndPullSucc(test);
+    public void pullSuccFile(final FileList test) {
+        fileListMapper.pullFileEndPullSucc(test);
     }
 
 }

@@ -1,7 +1,7 @@
 package com.hxht.dnsftp.service;
 
-import com.hxht.dnsftp.dao.TestMapper;
-import com.hxht.dnsftp.model.Test;
+import com.hxht.dnsftp.dao.FileListMapper;
+import com.hxht.dnsftp.model.FileList;
 import com.hxht.dnsftp.util.FtpUtil;
 import org.apache.commons.net.ftp.FTPClient;
 import org.apache.commons.net.ftp.FTPFile;
@@ -9,9 +9,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
+
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
@@ -22,7 +22,7 @@ import java.util.Map;
 /**
  * 实现从服务器(ftp)上读取文件，把服务器上的文件名存在到储到mysql数据库中 One
  */
-//@Component
+@Component
 public class FtpToSql {
 
     @Value("${ftp.remoteDirectory}")
@@ -37,7 +37,7 @@ public class FtpToSql {
     private FTPClient ftpClient;
 
     @Autowired
-    TestMapper testMapper;
+    FileListMapper fileListMapper;
 
     private static final Logger log = LoggerFactory.getLogger(FtpToSql.class);
 
@@ -45,21 +45,20 @@ public class FtpToSql {
     @Scheduled(cron = "0 0/2 * * * ?")
     public void ftpToSql() {
         log.info("FtpToSql  保存文件名到数据库，ftpToSql方法执行");
-        List<Test> requiredTestData = ftpToSqlGetData();
-        Map<String, List<Test>> map = pullData(remoteDirectory, new ArrayList<Test>(), new ArrayList<Test>(), requiredTestData);
+        List<FileList> requiredTestData = ftpToSqlGetData();
+        Map<String, List<FileList>> map = pullData(remoteDirectory, new ArrayList<FileList>(), new ArrayList<FileList>(), requiredTestData);
         insertUpdateData(map);
     }
 
     /**
      * ftp远程文件夹名称
-     *
      * @param remoteDirectory  远程文件夹的名称
      * @param pullAddList      需要向数据添加的数据
      * @param pullUpList       需要向数据库修改的数据（把downflag的状态标志位，改为0，表明这个文件已经稳定，可以进行拉取）
      * @param requiredTestData
      * @return
      */
-    public Map<String, List<Test>> pullData(String remoteDirectory, List<Test> pullAddList, List<Test> pullUpList, List<Test> requiredTestData) {
+    public Map<String, List<FileList>> pullData(String remoteDirectory, List<FileList> pullAddList, List<FileList> pullUpList, List<FileList> requiredTestData) {
         // 拉取的数据
         FTPFile[] allFile = null;
         try {
@@ -79,13 +78,13 @@ public class FtpToSql {
                                 + new String(ftpFile.getName().getBytes("ISO-8859-1"), "UTF-8");
 
                         tempFileName = tempFileName.substring(1, tempFileName.length());
-                        Test isExist = isExist(requiredTestData, tempFileName);//该文件存在于数据库就返回这个对象，否则返回null
+                        FileList isExist = isExist(requiredTestData, tempFileName);//该文件存在于数据库就返回这个对象，否则返回null
                         if (isExist == null) {//说明这个文件还没有保存到数据库
-                            pullAddList.add(new Test(tempFileName, ftpFile.getSize()));
+                            pullAddList.add(new FileList(tempFileName, ftpFile.getSize()));
                         }else {//说明这个文件已经保存到数据库当中，看这个文件的大小是否有变化，如果没有变化，则认为这个文件已经稳定，可以设置downflag=0,如果文件的大小有变化则把文件最新的大小保存到数据库
-                            if(Test.pullInitState.equals(isExist.getDownflag())){//判断文件是否是初始状态，如果是初始状态才进行处理，不是就不处理
+                            if(FileList.pullInitState.equals(isExist.getDownflag())){//判断文件是否是初始状态，如果是初始状态才进行处理，不是就不处理
                                 if(isSizeCha(ftpFile, isExist.getFilelen())){//说明这个文件稳定  注意：只有downflag=-3的状态才可以变成downflag=0，其它的状态不可以
-                                    isExist.setDownflag(Test.pullEnable);
+                                    isExist.setDownflag(FileList.pullEnable);
                                     pullUpList.add(isExist);
                                 }else{
                                     isExist.setFilelen(ftpFile.getSize());
@@ -106,7 +105,7 @@ public class FtpToSql {
         }
 
         if (this.remoteDirectory.equals(remoteDirectory)) {// 完成了一次任务，就让它存储数据库
-            Map<String, List<Test>> map = new HashMap<String, List<Test>>();
+            Map<String, List<FileList>> map = new HashMap<String, List<FileList>>();
             map.put("pullAddList", pullAddList);
             map.put("pullUpList", pullUpList);
             try {
@@ -125,29 +124,29 @@ public class FtpToSql {
 
 
     // 向数据库中插入数据
-    public void insertUpdateData(Map<String, List<Test>> map) {
-        List<Test> pullInsertList = map.get("pullAddList");//向数据库要新添加的数据
-        List<Test> pullUpdateList = map.get("pullUpList");//向数据库要修改的数据
+    public void insertUpdateData(Map<String, List<FileList>> map) {
+        List<FileList> pullInsertList = map.get("pullAddList");//向数据库要新添加的数据
+        List<FileList> pullUpdateList = map.get("pullUpList");//向数据库要修改的数据
         if (pullInsertList.size() > 0) {//向数据库中插入新数据数据
-            System.out.println(testMapper.ftpToSqlInsertData(pullInsertList));;
+            System.out.println(fileListMapper.ftpToSqlInsertData(pullInsertList));;
         }
         if (pullUpdateList.size() > 0) {//向数据库中更新数据
-            testMapper.ftpToSqlUpdateData(pullUpdateList);
+            fileListMapper.ftpToSqlUpdateData(pullUpdateList);
         }
     }
 
     //得到数据库的数据
-    public List<Test> ftpToSqlGetData() {
-        return testMapper.ftpToSqlGetData(Test.deleteflagSucc);
+    public List<FileList> ftpToSqlGetData() {
+        return fileListMapper.ftpToSqlGetData(FileList.deleteflagSucc);
     }
 
     /**
      * 判断该文件是否已经存在于数据库中，如果存在数据库就返回这个对象，如果不存在就返回null
      */
-    public Test isExist(List<Test> test, String filename) {
-        Test flag = null;
+    public FileList isExist(List<FileList> test, String filename) {
+        FileList flag = null;
         if(test!=null){
-            for (Test temp : test) {
+            for (FileList temp : test) {
                 if (temp.getFilename().equals(filename)) {
                     flag = temp;
                     break;

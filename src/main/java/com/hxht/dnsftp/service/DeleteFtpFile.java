@@ -1,16 +1,16 @@
 package com.hxht.dnsftp.service;
 
-import com.hxht.dnsftp.dao.TestMapper;
-import com.hxht.dnsftp.model.Test;
+import com.hxht.dnsftp.dao.FileListMapper;
+import com.hxht.dnsftp.model.FileList;
 import com.hxht.dnsftp.util.FtpUtil;
 import org.apache.commons.net.ftp.FTPClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
+
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -20,7 +20,7 @@ import java.util.Map;
 /**
  * 删除别人服务器上的文件并且这个文件已经拉取成功，二天执行一回 four
  */
-//@Component
+@Component
 public class DeleteFtpFile {
 
     @Value("${hdfs.hdfsUrl}")
@@ -38,7 +38,7 @@ public class DeleteFtpFile {
     public String remoteDirectory;
 
     @Autowired
-    TestMapper testMapper;
+    FileListMapper fileListMapper;
 
     private static final Logger log = LoggerFactory.getLogger(DeleteFtpFile.class);
 
@@ -48,16 +48,16 @@ public class DeleteFtpFile {
     @Scheduled(cron = "30 0/3 * * * ?")
     public void deleteFtpFile() {
         log.info("deleteFtpFile，deleteFtpFile方法执行");
-        List<Test> data = deleteFtpFileGetData();
+        List<FileList> data = deleteFtpFileGetData();
 
         FTPClient ftpClient = null;
 
         if (data!=null&&data.size() > 0) {
             ftpClient = ftpUtil.getFtpClient();
-            List<Test> succDelFile = new ArrayList<Test>();
+            List<FileList> succDelFile = new ArrayList<FileList>();
 
             for (int i = 0; i < data.size(); i++) {
-                Test temp = data.get(i);
+                FileList temp = data.get(i);
                 log.info("删除的对象是" + temp);
                 String filename = temp.getFilename();
                 String[] splitArr = filename.split(".");
@@ -66,7 +66,7 @@ public class DeleteFtpFile {
                 try {
                     boolean flag = ftpClient.rename(new String(("/" + filename).getBytes("UTF-8"), "ISO-8859-1"), new String(("/" + name + numStr + ".csv").getBytes("UTF-8"), "ISO-8859-1"));
                     if (flag) {
-                        temp.setDeleteflag(Test.deleteflagSucc);
+                        temp.setDeleteflag(FileList.deleteflagSucc);
                         succDelFile.add(temp);
                     }
                 } catch (IOException e) {
@@ -119,20 +119,20 @@ public class DeleteFtpFile {
     /**
      * 查询符合删除条件的数据
      */
-    public List<Test> deleteFtpFileGetData() {
-        Map<String,String> map = new HashMap<String,String>();
-        map.put("downflag",Test.pullSucc);
+    public List<FileList> deleteFtpFileGetData() {
+        Map<String,Object> map = new HashMap<String,Object>();
+        map.put("downflag", FileList.pullSucc);
         map.put("intervalDay",intervalDay);
-        map.put("deleteflag",Test.deleteflagInit);
-        List<Test> data = testMapper.deleteFtpFileGetData(map);
+        map.put("deleteflag", FileList.deleteflagInit);
+        List<FileList> data = fileListMapper.deleteFtpFileGetData(map);
         return data;
     }
 
     //修改数据
-    public int deleteFtpFileChaStatus(List<Test> list) {
+    public int deleteFtpFileChaStatus(List<FileList> list) {
         int num = 0;
         if(list.size()>0){
-            num = testMapper.deleteFtpFileChaStatus(list);
+            num = fileListMapper.deleteFtpFileChaStatus(list);
         }
         return num;
     }

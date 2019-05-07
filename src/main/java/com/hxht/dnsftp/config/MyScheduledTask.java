@@ -10,6 +10,7 @@ import org.springframework.scheduling.support.ScheduledMethodRunnable;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ScheduledFuture;
 
 /**
@@ -33,6 +34,7 @@ public class MyScheduledTask extends ThreadPoolTaskScheduler {
                 future = scheduledTasks.get(run);
             }
         }
+
         future.cancel(true);
         scheduledTasks.remove(run);
         ScheduledFuture<?> fut = this.scheduleAtFixedRate(run, DateUtils.addMinutes(new Date(), 2), 2 * 60 * 1000);

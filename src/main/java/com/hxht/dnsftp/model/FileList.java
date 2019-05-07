@@ -2,28 +2,27 @@ package com.hxht.dnsftp.model;
 
 import java.util.Date;
 
-public class Test {
+public class FileList {
 
-    public static String deleteflagSucc = "1";//成功删除的标志
-    public static String deleteflagInit = "0";//删除标志的初始值
+    public static Integer deleteflagSucc = 1;//成功删除的标志
+    public static Integer deleteflagInit = 0;//删除标志的初始值
 
-    public static String pullSucc = "-1";//成功拉取数据的标志
-    public static String pullEnable = "0";//可拉取状态（文件大小稳定的状态）
-    public static String pullInitState = "-3";//数据库默认值
-    public static String pullingFile = "-2";//文件正在被拉取
-    public static String pullFailOne = "1";//拉取失败一次
-    public static String pullFailTwo = "2";//拉取失败两次
-    public static String pullFailThree = "3";//拉取失败三次
-
+    public static Integer pullSucc = -1;//成功拉取数据的标志
+    public static Integer pullEnable = 0;//可拉取状态（文件大小稳定的状态）
+    public static Integer pullInitState = -3;//数据库默认值
+    public static Integer pullingFile = -2;//文件正在被拉取
+    public static Integer pullFailOne = 1;//拉取失败一次
+    public static Integer pullFailTwo = 2;//拉取失败两次
+    public static Integer pullFailThree = 3;//拉取失败三次
 
     public static String delRemoteFileInterval = "3";//拉取失败三次
 
 
-    public Test() {
+    public FileList() {
 
     }
 
-    public Test(String filename, Long filelen) {
+    public FileList(String filename, Long filelen) {
         this.filename = filename;
         this.filelen = filelen;
     }
@@ -40,11 +39,11 @@ public class Test {
 
     private String filename;
 
-    private String downflag;
+    private Integer downflag;
 
     private Date createtime;
 
-    private String deleteflag;
+    private Integer deleteflag;
 
     private Date downtime;
 
@@ -52,7 +51,7 @@ public class Test {
 
     private Date startpulltime;
 
-    private String pulltimeoutcount;
+    private Integer pulltimeoutcount;
 
     private String pullip;
 
@@ -72,13 +71,8 @@ public class Test {
         this.filename = filename == null ? null : filename.trim();
     }
 
-    public String getDownflag() {
-        return downflag;
-    }
 
-    public void setDownflag(String downflag) {
-        this.downflag = downflag == null ? null : downflag.trim();
-    }
+
 
     public Date getCreatetime() {
         return createtime;
@@ -88,13 +82,7 @@ public class Test {
         this.createtime = createtime;
     }
 
-    public String getDeleteflag() {
-        return deleteflag;
-    }
 
-    public void setDeleteflag(String deleteflag) {
-        this.deleteflag = deleteflag == null ? null : deleteflag.trim();
-    }
 
     public Date getDowntime() {
         return downtime;
@@ -120,12 +108,28 @@ public class Test {
         this.startpulltime = startpulltime;
     }
 
-    public String getPulltimeoutcount() {
+    public Integer getDownflag() {
+        return downflag;
+    }
+
+    public void setDownflag(Integer downflag) {
+        this.downflag = downflag;
+    }
+
+    public Integer getDeleteflag() {
+        return deleteflag;
+    }
+
+    public void setDeleteflag(Integer deleteflag) {
+        this.deleteflag = deleteflag;
+    }
+
+    public Integer getPulltimeoutcount() {
         return pulltimeoutcount;
     }
 
-    public void setPulltimeoutcount(String pulltimeoutcount) {
-        this.pulltimeoutcount = pulltimeoutcount == null ? null : pulltimeoutcount.trim();
+    public void setPulltimeoutcount(Integer pulltimeoutcount) {
+        this.pulltimeoutcount = pulltimeoutcount;
     }
 
     public String getPullip() {
