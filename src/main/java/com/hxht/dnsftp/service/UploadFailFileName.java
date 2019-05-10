@@ -51,9 +51,10 @@ public class UploadFailFileName {
 
     /**
      * 把拉取失败的文件名，上传到别人的服务器的失败文件夹当中，每一天执行一回，每天0点10分执行
-     * @Scheduled(cron = "0 10 0 * * ?")
+     * 真实的定时是：@Scheduled(cron = "0 10 0 * * ?")
+     * 测试的是：@Scheduled(cron = "0 0/10 * * * ?")
      */
-    @Scheduled(cron = "0 0/10 * * * ?")
+    @Scheduled(cron = "${uploadFailFileName.schedule.setting}")
     public void uploadFailFileName() {
         log.info("UploadFailFileName  方法名uploadFailFileName上传错误文件到服务器执行");
         String lastDay = DateUtils.getLastDate();

@@ -11,20 +11,25 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * 系统坏了之后 进行系统重新启动时的程序 file
  * 只需处理downflag=-2，其它的 -3(钢存入的数据)  0（可拉取的状态），1（拉取一次失败的程序）2（拉取两次次失败的程序）1（拉取三次失败的程序）不需要处理
  * @Order(value=1)  five
  */
-@Component
+//@Component
 public class BootResume implements CommandLineRunner {
 
     @Value("${hdfs.hdfsUrl}")
     private String hdfsUrl;
     @Value("${hdfs.hdfsDir}")
     private String hdfsDir;
+    @Value("${ftp.pullip}")
+    public String pullip;
+
 
     @Autowired
     FileListMapper fileListMapper;
@@ -59,7 +64,10 @@ public class BootResume implements CommandLineRunner {
      * 查询符合条件的数据 downflag = -2
      */
     public List<FileList> bootResumeGetData() {
-        List<FileList> list = fileListMapper.bootResumeGetData(FileList.pullingFile);
+        Map<String,Object> map = new HashMap<String,Object>();
+        map.put("downflag",FileList.pullingFile);
+        map.put("pullip",pullip);
+        List<FileList> list = fileListMapper.bootResumeGetData(map);
         return list;
     }
     /***

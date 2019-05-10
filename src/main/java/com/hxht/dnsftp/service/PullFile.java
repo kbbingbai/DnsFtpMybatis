@@ -52,8 +52,10 @@ public class PullFile {
 
     /**
      * 从服务器上拉取文件
+     * 测试用的，真实的也是一样 @Scheduled(fixedRate = 120000, initialDelay = 5000)  注意每台initialDelay隔20秒
+     *
      */
-    @Scheduled(fixedRate = 120000, initialDelay = 5000)
+    @Scheduled(fixedDelayString = "${pullFile.schedule.setting.fixedDelay}", initialDelayString = "${pullFile.schedule.setting.initialDelayThird}")
     public void pullFile() {
         //得到一个未被标记的文件名，并把他标记为正在在拉取
         log.info("PullFile  进行拉取文件，pullFile方法执行");

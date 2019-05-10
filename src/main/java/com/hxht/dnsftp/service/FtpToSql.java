@@ -41,8 +41,13 @@ public class FtpToSql {
 
     private static final Logger log = LoggerFactory.getLogger(FtpToSql.class);
 
-    //每隔2分钟一次
-    @Scheduled(cron = "0 0/2 * * * ?")
+    /**
+     * 每隔2分钟一次
+     * 测试用的 @Scheduled(cron = "0 0/2 * * * ?")
+     * 配置在文件中则是 @Scheduled(cron = "${deleteFtpFile.schedule.setting}")
+     *
+     */
+    @Scheduled(cron = "${ftpToSql.schedule.setting}")
     public void ftpToSql() {
         log.info("FtpToSql  保存文件名到数据库，ftpToSql方法执行");
         List<FileList> requiredTestData = ftpToSqlGetData();

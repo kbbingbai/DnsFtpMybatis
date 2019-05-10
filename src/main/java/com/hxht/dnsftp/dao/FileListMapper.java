@@ -9,7 +9,7 @@ import java.util.Map;
 public interface FileListMapper {
 
     //BootResume
-    List<FileList> bootResumeGetData(Integer downflag);
+    List<FileList> bootResumeGetData(Map map);
     int bootResumeChaStatus(List list);
 
     //DeleteFtpFile

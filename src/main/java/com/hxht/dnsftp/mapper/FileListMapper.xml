@@ -20,8 +20,8 @@
   </sql>
 
   <!--bootResume-->
-  <select id="bootResumeGetData" parameterType="java.lang.Integer" resultMap="BaseResultMap">
-    select <include refid="Base_Column_List" /> from filelist where downflag = #{downflag}
+  <select id="bootResumeGetData" parameterType="java.util.Map" resultMap="BaseResultMap">
+    select <include refid="Base_Column_List" /> from filelist where downflag = #{downflag} and pullip = #{pullip}
   </select>
 
   <update id="bootResumeChaStatus" parameterType="java.util.List" >
@@ -41,7 +41,7 @@
   <select id="deleteFtpFileGetData" parameterType="java.util.Map" resultMap="BaseResultMap">
     select <include refid="Base_Column_List" />,difdays,startpulltimeDateFormat from
     (select <include refid="Base_Column_List" />,DATE_FORMAT(startpulltime,'%Y-%m-%d') startpulltimeDateFormat,DATEDIFF(now(),downtime) as difdays from filelist) temp
-    where (downflag=#{downflag} or difdays>=#{intervalDay}) and deleteflag=#{deleteflag}
+    where downflag=#{downflag} and difdays>=#{intervalDay} and deleteflag=#{deleteflag}
   </select>
 
   <update id="deleteFtpFileChaStatus" parameterType="java.util.List" >
