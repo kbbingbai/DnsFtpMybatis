@@ -9,12 +9,18 @@ import java.util.Map;
 public interface FileListMapper {
 
     //BootResume
-    List<FileList> bootResumeGetData(Integer downflag);
+    List<FileList> bootResumeGetData(Map map);
     int bootResumeChaStatus(List list);
 
     //DeleteFtpFile
     List<FileList> deleteFtpFileGetData(Map map);
+
+    List<FileList> deleteLocalFtpFileGetData(Map map);
+
     int deleteFtpFileChaStatus(List list);
+
+
+
 
     //FtpToSql
     int ftpToSqlInsertData(List list);

@@ -38,4 +38,17 @@ public class DateUtils {
         return tarDf.format(time);
     }
 
+    //得到当天日期的前n天  格式：yyyy-MM-dd
+    public static String getNDate(int n) {
+        SimpleDateFormat tarDf = new SimpleDateFormat("yyyy-MM-dd");
+        Calendar cal = Calendar.getInstance();
+        cal.setTime(new Date());
+        cal.add(Calendar.DATE, -n);
+        Date time = cal.getTime();
+        return tarDf.format(time);
+    }
+
+
+
+
 }

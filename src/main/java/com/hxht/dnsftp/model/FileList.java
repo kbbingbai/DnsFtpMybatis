@@ -15,6 +15,8 @@ public class FileList {
     public static Integer pullFailTwo = 2;//拉取失败两次
     public static Integer pullFailThree = 3;//拉取失败三次
 
+    public static Integer kafkaflagSucc = 1;//拉取失败三次
+
     public static String delRemoteFileInterval = "3";//拉取失败三次
 
 
@@ -55,6 +57,9 @@ public class FileList {
 
     private String pullip;
 
+    private String kafkaflag;
+
+
     public Integer getId() {
         return id;
     }
@@ -71,9 +76,6 @@ public class FileList {
         this.filename = filename == null ? null : filename.trim();
     }
 
-
-
-
     public Date getCreatetime() {
         return createtime;
     }
@@ -81,8 +83,6 @@ public class FileList {
     public void setCreatetime(Date createtime) {
         this.createtime = createtime;
     }
-
-
 
     public Date getDowntime() {
         return downtime;
@@ -164,22 +164,31 @@ public class FileList {
         this.pullfiletimeoutmin = pullfiletimeoutmin;
     }
 
+    public String getKafkaflag() {
+        return kafkaflag;
+    }
+
+    public void setKafkaflag(String kafkaflag) {
+        this.kafkaflag = kafkaflag;
+    }
+
     @Override
     public String toString() {
-        return "Test{" +
+        return "FileList{" +
                 "difdays='" + difdays + '\'' +
                 ", startpulltimeDateFormat='" + startpulltimeDateFormat + '\'' +
                 ", pullfiletimeoutmin='" + pullfiletimeoutmin + '\'' +
                 ", id=" + id +
                 ", filename='" + filename + '\'' +
-                ", downflag='" + downflag + '\'' +
+                ", downflag=" + downflag +
                 ", createtime=" + createtime +
-                ", deleteflag='" + deleteflag + '\'' +
+                ", deleteflag=" + deleteflag +
                 ", downtime=" + downtime +
                 ", filelen=" + filelen +
                 ", startpulltime=" + startpulltime +
-                ", pulltimeoutcount='" + pulltimeoutcount + '\'' +
+                ", pulltimeoutcount=" + pulltimeoutcount +
                 ", pullip='" + pullip + '\'' +
+                ", kafkaflag='" + kafkaflag + '\'' +
                 '}';
     }
 }
